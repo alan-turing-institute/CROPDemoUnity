@@ -46,12 +46,9 @@ namespace JsonSchema
     [System.Serializable]
     public class TemperatureHumidityReading : SensorReading
     {
-       // public int sensor_id;
         public float humidity;
         public float temperature;
-       // public string time_created;
-       // public string time_updated;
-       // public string timestamp;
+       
     }
 
     [System.Serializable]
@@ -63,11 +60,7 @@ namespace JsonSchema
     [System.Serializable]
     public class CO2Reading : SensorReading
     {
-       // public int sensor_id;
         public float co2;
-        //public string time_created;
-        //public string time_updated;
-        //public string timestamp;
     }
 
     [System.Serializable]
@@ -79,12 +72,8 @@ namespace JsonSchema
     [System.Serializable]
     public class AirVelocityReading : SensorReading
     {
-     //   public int sensor_id;
         public float air_velocity;
         public float current;
-       // public string time_created;
-       // public string time_updated;
-       // public string timestamp;
     }
 
     [System.Serializable]
@@ -141,14 +130,25 @@ namespace JsonSchema
         public string next_action_time;
     }
 
-///  maybe the below will work when getting data from API - doesn't currently work reading from JSON
-
     [System.Serializable]
     public class CropDataList
     {
         public List<CropData> cropList = new List<CropData>();
     }
 
+    [System.Serializable]
+    public class ShelfData
+    {   
+        public CropData cropData;
+        public Sensor nearestSensor;
+        public TemperatureHumidityReading latestReading;
+    }
+
+    [System.Serializable]
+    public class ShelfDataList
+    {
+        public List<ShelfData> shelfList = new List<ShelfData>();
+    }
 
     [System.Serializable]
     public class TextureCoords
@@ -210,4 +210,5 @@ namespace JsonSchema
     [System.Serializable]
     public class FlythroughPanelText : SerializableDictionary<string, string>
     {}
+
 }

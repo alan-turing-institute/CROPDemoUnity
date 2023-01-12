@@ -45,7 +45,6 @@ public class GenerateColumns : MonoBehaviour
             //define direction and location of new instantiated object
             if (i < column_count) { // main part of farm
                 new_column.transform.Translate(Vector3.left * (start_offset + (i * column_width)));
-                print("New Column position "+new_column.transform.position);
             } else {
                 new_column.transform.Translate( Vector3.left * (start_offset + gap + (i * column_width)));
             }

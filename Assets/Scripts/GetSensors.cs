@@ -182,7 +182,7 @@ namespace GenSensor
                 newSensor.transform.parent = parentSensor.transform;
 
                 //Set sensor properties to instantiated sensor
-                newSensor.GetComponent<SensorMethods>().sensor = sensor;
+            //TEMPORARY    newSensor.GetComponent<SensorMethods>().sensor = sensor;
                 sensorReadingsScript.sensors.Add(sensor);
                 // set the sensor's Canvas to scale with screen size
                 GameObject sensorCanvas = newSensor.transform.Find("Canvas").gameObject;

@@ -3,12 +3,17 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Move
+  - Rotate90Left
+  - Rotate90Right
+  - Pause
+  - Rotate180
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Shelf
   - Water
   - UI
   - 

@@ -8,12 +8,9 @@ using JsonSchema;
 
 public class ShelfPropagation : MonoBehaviour
 {
-    /* this class is to be replaced with propagation data once
-    developed in the web app*/
-    public int propagation_value;
 
     Color defaultColour = new Color(0F, 131F, 0F);
-    public Dictionary<int, CropData> cropDataForColumn; // = new Dictionary<int, CropData>();
+    public Dictionary<int, CropData> cropDataForColumn; 
 
     public Dictionary<string, Color> cropColourDict;
     public Dictionary<string, Color> harvestColourDict;
@@ -32,6 +29,11 @@ public class ShelfPropagation : MonoBehaviour
             // and the corresponding GameObject, so that we can set its name
             GameObject shelf = shelfTransform.gameObject;
             shelf.name = this.name + "-" + (i+1).ToString();
+            // set the layer of the shelf
+            int shelfLayer = LayerMask.NameToLayer("Shelf");
+            shelf.layer = shelfLayer;
+            // add a box collider to the shelf
+            BoxCollider bc = shelf.AddComponent<BoxCollider>() as BoxCollider;
             // set the colour of the shelf.
             shelfTransform.GetComponent<Renderer>().material.color = defaultColour;
         }
