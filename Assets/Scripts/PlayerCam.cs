@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// This script is attached to the "PlayerCamera" GameObject.
 public class PlayerCam : MonoBehaviour {
     public float sensX;
     public float sensY;
@@ -18,11 +19,14 @@ public class PlayerCam : MonoBehaviour {
     Ray ray;
     RaycastHit hitData;
 
+    bool mouseButtonDown = false;
+
     private void Start() {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
         shelfDataHolder = farm.GetComponent<ShelfDataHolder>();
+        // set starting direction to look in
+        yRotation = -90f;
     }
 
     private void Update() {
@@ -40,7 +44,6 @@ public class PlayerCam : MonoBehaviour {
         // see if we're looking at a shelf
         bool lookShelf = LookingAtShelf();
         if (lookShelf) {
-            print("LOOKING AT "+hitData.transform.gameObject.name);
             noLookReticle.SetActive(false);
             lookReticle.SetActive(true);
             shelfDataHolder.UpdateInfoPanel(hitData.transform.gameObject.name);
@@ -50,8 +53,16 @@ public class PlayerCam : MonoBehaviour {
         }
 
         // listen for clicks
-        if (Input.GetMouseButton(0)) {
-            shelfDataHolder.ToggleInfoPanel();
+        if (Input.GetKey("mouse 0")) {
+            if (! mouseButtonDown) {
+                shelfDataHolder.ShowInfoPanel(lookShelf);
+                mouseButtonDown = true;
+            }
+        } else {
+            if (mouseButtonDown) {
+                mouseButtonDown = false;
+                shelfDataHolder.HideInfoPanel();
+            }
         }
 
     }

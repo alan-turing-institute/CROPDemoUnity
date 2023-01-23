@@ -9,38 +9,25 @@ public class UIPanelsOnObject : MonoBehaviour
 {
 
     public GameObject label;
+    public GameObject sensorMesh;
 
-    Camera mainCam;
-    Camera topDownCam;
-    Camera currentCam;
+    Camera playerCam;
+    
 
     void Start() {
         GameObject camBase = GameObject.Find("Cameras");
-        Transform topDownTransform = camBase.transform.Find("TopDownCam/TopDownCameraHolder/TopDownCamera");
-        topDownCam = topDownTransform.gameObject.GetComponent<Camera>();
-        Transform mainTransform = camBase.transform.Find("MainCam/Main Camera");
-        mainCam = mainTransform.gameObject.GetComponent<Camera>();
-        UseMainCam();
+        Transform cameraTransform = camBase.transform.Find("FirstPersonCam/PlayerCameraHolder/PlayerCamera");
+        playerCam = cameraTransform.gameObject.GetComponent<Camera>();
     }
-
-    public void UseMainCam() {
-        currentCam = mainCam;
-    }
-
-    public void UseTopDownCam() {
-        currentCam = topDownCam;
-    }
-
 
     // Update is called once per frame
     void Update()
     {
-        if (mainCam.gameObject.active) UseMainCam();
-        else UseTopDownCam();
         //get position of object on canvas
-        Vector3 canvas_pos = currentCam.WorldToScreenPoint(this.transform.position);
+        Vector3 canvasPos = playerCam.WorldToScreenPoint(this.transform.position);
+        //Vector3 canvasPos = playerCam.WorldToScreenPoint(sensorMesh.transform.position);
         //correct z position
-        Vector3 pos_2d = new Vector3(canvas_pos.x, canvas_pos.y, 0);
-        label.transform.position = pos_2d;
+        Vector3 pos2d = new Vector3(canvasPos.x, canvasPos.y, 0);
+        label.transform.position = pos2d;
     }
 }

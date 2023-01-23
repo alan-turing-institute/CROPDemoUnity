@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Events;
 
 using JsonSchema;
 
@@ -18,7 +19,10 @@ public class DisplayCropData : MonoBehaviour
     GameObject legendPanel;
     //public GameObject legendCanvas;
 
-    string url = "https://cropapptest.azurewebsites.net/queries/batchesinfarm";
+    public UnityEvent retrievedCropDataEvent = new UnityEvent();
+
+    ///string url = "https://cropapptest.azurewebsites.net/queries/batchesinfarm";
+    string url = "http://localhost:5000/queries/batchesinfarm";
 
     // make a list of colours which we can use for crops
     List<Color> cropColourList = new List<Color>
@@ -57,7 +61,8 @@ public class DisplayCropData : MonoBehaviour
         {"unknown/none", new Color(0.75F, 0.75F, 0.75F, 1)}
      };
 
-    Dictionary<string, Dictionary<int, CropData> > cropDataDict = new Dictionary<string, Dictionary<int, CropData> >();
+    // Dictionary keyed by column name (e.g. "A-24"), with internal dictionary keyed by shelf number
+    public Dictionary<string, Dictionary<int, CropData> > cropDataDict = new Dictionary<string, Dictionary<int, CropData> >();
 
     // list of aisles in the farm
     List<string> aisles = new List<string>{"A","B","C","D","E"};
@@ -74,6 +79,7 @@ public class DisplayCropData : MonoBehaviour
     void Start() {
         showingCropType = true;
         showingHarvestTime = false;
+        retrievedCropDataEvent.AddListener(HandleCropData);
        // GameObject legendCanvas = GameObject.Find("Canvas");
        // legendGenerator = legendCanvas.GetComponent<LegendGenerator>();
        // legendPanel = legendCanvas.transform.Find("LegendPanel").gameObject;
@@ -128,21 +134,22 @@ public class DisplayCropData : MonoBehaviour
             int shelf = cd.shelf;
             CropData sanitizedCropData = SanitizeCropName(cd);
             cropDataDict[columnName][shelf] = sanitizedCropData;
-            string cropType = sanitizedCropData.name;
+            string cropType = sanitizedCropData.crop_type_name;
             print("Adding crop data to "+columnName+" "+shelf);
             if (! cropColourDict.ContainsKey(cropType)) {
                 // add the next colour from the list
                 cropColourDict[cropType] = cropColourList[cropColourDict.Count];
             }
         }
+        retrievedCropDataEvent.Invoke();
     }
     // to avoid an unsightly legend, remove the trailing description in parentheses
     // e.g. "(micro)" from some crop names.
     CropData SanitizeCropName(CropData cd) {
-        if (cd.name.Contains("(")) {
-            int bracketIndex = cd.name.IndexOf("(");
-            string newName = cd.name.Substring(0, bracketIndex-1);
-            cd.name = newName;
+        if (cd.crop_type_name.Contains("(")) {
+            int bracketIndex = cd.crop_type_name.IndexOf("(");
+            string newName = cd.crop_type_name.Substring(0, bracketIndex-1);
+            cd.crop_type_name = newName;
         }
         return cd;
     }
@@ -153,11 +160,11 @@ public class DisplayCropData : MonoBehaviour
         cropData.aisle = aisle;
         cropData.column = column;
         cropData.shelf = shelf;
-        cropData.name = "unknown/none";
+        cropData.crop_type_name = "unknown/none";
         cropData.number_of_trays = 0;
         cropData.tray_size = 0f;
         cropData.event_time = "unknown/none";
-        cropData.next_action_time = "unknown/none";
+        cropData.expected_harvest_time = "unknown/none";
         return cropData;
     }
 
@@ -180,7 +187,7 @@ public class DisplayCropData : MonoBehaviour
                 for (int i=1; i<= nColumns; i++) {
                     Transform columnTransform = aisle.transform.Find(aisle.name+"-"+i.ToString());
                     if (columnTransform == null) {
-                        print("Couldn't find "+aisle.name+"-"+i.ToString() );
+                        print("ColourAllShelves "+colourScheme+": Couldn't find "+aisle.name+"-"+i.ToString() );
                         continue;
                     }
                     GameObject column = columnTransform.gameObject;
@@ -220,6 +227,11 @@ public class DisplayCropData : MonoBehaviour
                 }
             }
         }
+    }
+
+    void HandleCropData() {
+        retrievedCropDataEvent.RemoveListener(HandleCropData);
+        ColourAllShelvesCropType();
     }
 
     void ColourAllShelvesCropType() {

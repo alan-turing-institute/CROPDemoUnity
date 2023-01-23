@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 using JsonSchema;
-using GenSensor;
 using System;
 
 public class SensorMethods : MonoBehaviour
@@ -66,9 +65,9 @@ public class SensorMethods : MonoBehaviour
         SetupUI();
 
         // get the script that holds the readings
-        GameObject sensorsGameObj = GameObject.Find("sensors");
+        GameObject sensorsGameObj = GameObject.Find("Sensors");
         if (sensorsGameObj == null) {
-            print("Couldn't find 'sensors' GameObject");
+            print("Couldn't find 'Sensors' GameObject");
             return;
         }
         SensorReadings sensorReadingsScript = sensorsGameObj.GetComponent<SensorReadings>();
@@ -199,8 +198,8 @@ public class SensorMethods : MonoBehaviour
             }
             if (hourList.Count > 0) {
                 has_recent_data = true;
-                temperature_graph.transform.GetChild(0).GetComponent<WindowGraphs>().setup(tempList, 45f);
-                humidity_graph.transform.GetChild(0).GetComponent<WindowGraphs>().setup(humidityList, 100f);
+                temperature_graph.transform.GetChild(0).GetComponent<SensorGraph>().ShowGraph(tempList, 45f);
+                humidity_graph.transform.GetChild(0).GetComponent<SensorGraph>().ShowGraph(humidityList, 100f);
             }
         } else if (sensor.sensor_type == co2SensorType) {
             CO2ReadingList readings = (CO2ReadingList)sensorReadings;
@@ -233,7 +232,7 @@ public class SensorMethods : MonoBehaviour
             }
             print("size of co2List is "+co2List.Count);
             if (hourList.Count > 0) {
-                co2_graph.transform.GetChild(0).GetComponent<WindowGraphs>().setup(co2List, maxAverageCO2*1.5f);        
+                co2_graph.transform.GetChild(0).GetComponent<SensorGraph>().ShowGraph(co2List, maxAverageCO2*1.5f);        
                 has_recent_data = true;
             }
         }  else if (sensor.sensor_type == airVelocitySensorType) {
@@ -268,7 +267,7 @@ public class SensorMethods : MonoBehaviour
             print("size of airVelocityList is "+airVelocityList.Count);
             if (hourList.Count > 0) {
                 has_recent_data = true;
-                airvelocity_graph.transform.GetChild(0).GetComponent<WindowGraphs>().setup(airVelocityList, maxAverageAirVelocity*1.5f);        
+                airvelocity_graph.transform.GetChild(0).GetComponent<SensorGraph>().ShowGraph(airVelocityList, maxAverageAirVelocity*1.5f);        
             }
         } else {
             print("Unknown sensor type "+sensor.sensor_type);

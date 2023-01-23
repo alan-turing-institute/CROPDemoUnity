@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// This script is attached to the "Player" GameObject.
 public class PlayerMovement : MonoBehaviour
 {
 
@@ -18,8 +19,7 @@ public class PlayerMovement : MonoBehaviour
     void Start() {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
-        //orientation.rotation = Quaternion.Euler(0,247.7f,0);
-        //print("Setting rotation of Orientation transform");
+        orientation.rotation = Quaternion.Euler(0,-90f,0);
     }
 
     private void MyInput() {

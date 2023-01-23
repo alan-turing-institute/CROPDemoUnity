@@ -5,6 +5,37 @@ using UnityEngine;
 namespace JsonSchema
 {
 
+    // We might want to replace all the classes where we have zone/aisle/column/shelf
+    // with this location class, BUT, in fact on the API side it's easier to have a flat
+    // structure where we convert the db query result to an array.
+    // In the meantime, we use the Location class in ShelfData.
+    [System.Serializable]
+    public class Location 
+    {
+        public string zone;
+        public string aisle;
+        public int column;
+        public int shelf;
+    }
+
+    public class LocationMaker {
+        public Location LocationFromString(string locationString) {
+            Location l = new Location();
+            string[] elements = locationString.Split('-');
+			l.aisle = elements[0];
+			l.column = int.Parse(elements[1]);
+			l.shelf = int.Parse(elements[2]);
+            return l;
+        }
+        public string LocationStringFromLocation(Location l) {
+            return l.aisle+"-"+l.column.ToString()+"-"+l.shelf.ToString();
+        }
+
+        public string ColumnNameFromLocation(Location l) {
+            return l.aisle+"-"+l.column.ToString();
+        }
+    }
+
     [System.Serializable]
     public class Sensor
     {
@@ -123,11 +154,11 @@ namespace JsonSchema
         public string aisle;
         public int column;
         public int shelf;
-        public string name;
+        public string crop_type_name;
         public int number_of_trays;
         public float tray_size;
         public string event_time;
-        public string next_action_time;
+        public string expected_harvest_time;
     }
 
     [System.Serializable]
@@ -139,9 +170,11 @@ namespace JsonSchema
     [System.Serializable]
     public class ShelfData
     {   
-        public CropData cropData;
-        public Sensor nearestSensor;
-        public TemperatureHumidityReading latestReading;
+        public Location location;
+        public int sensor_id;
+        public CropDataList cropData;   // these are lists because they might be empty
+        public SensorList nearestSensor;
+        public TempRelHumReadingList latestReading;
     }
 
     [System.Serializable]
@@ -149,6 +182,23 @@ namespace JsonSchema
     {
         public List<ShelfData> shelfList = new List<ShelfData>();
     }
+
+    // For each shelf, what is the nearest T/RH sensor
+    [System.Serializable]
+    public class NearestSensorMapping
+    {
+        public string aisle;
+        public int column;
+        public int shelf;
+        public int sensor_id;
+    }
+
+    [System.Serializable]
+    public class NearestSensorMappingList
+    {
+        public List<NearestSensorMapping> mappingList = new List<NearestSensorMapping>();
+    }
+
 
     [System.Serializable]
     public class TextureCoords

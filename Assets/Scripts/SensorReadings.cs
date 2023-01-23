@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Events;
 using JsonSchema;
 
 // this is attached to the "sensors" GameObject
@@ -9,6 +10,11 @@ using JsonSchema;
 public class SensorReadings : MonoBehaviour {
 
     public List<Sensor> sensors;
+    public int numSensors = -1; //this will be set by GetSensors - shouldn't be zero,
+                                // or we will immediately think we have already retrieved all data
+    // increment these counters as we retrieve readings, so we know when we have them all
+    int numReadings = 0;
+    int numEmpty = 0;
     // base connection string
     public string connection_string;
     // url endpoint for T&RH data
@@ -20,10 +26,13 @@ public class SensorReadings : MonoBehaviour {
     string airVelocitySensorType = "Aranet Air Velocity";
     // containers to hold all the readings for all the sensors.
     public Dictionary<int, SensorReadingList> readingsDict;
+    bool retrievedAllReadings = false;
     float minTemp = 999f;
     float maxTemp = -999f;
     float minHumid = 999f;
     float maxHumid = -999f;
+
+    public UnityEvent retrievedSensorReadingsEvent = new UnityEvent();
 
     // Start is called before the first frame update
     void Start()
@@ -46,7 +55,9 @@ public class SensorReadings : MonoBehaviour {
                 StartCoroutine(GetJsonReadings(connection_string, co2Request, sensor, dateRangeQuery));
             } else if (sensor.sensor_type == airVelocitySensorType) {
                 StartCoroutine(GetJsonReadings(connection_string, airVelocityRequest, sensor, dateRangeQuery));
-            } else print("Unknown sensor type "+sensor.sensor_type+" "+sensor.sensor_id);        
+            } else {
+                print("Unknown sensor type "+sensor.sensor_type+" "+sensor.sensor_id);  
+            }      
         }
     }
 
@@ -55,7 +66,6 @@ public class SensorReadings : MonoBehaviour {
 
         //Create a UnityWebRequest for HTTP GET.
         string url = baseURL + "/" + requestEndpoint + sensor.sensor_id.ToString() + dateRange;
-        //print("getting from url "+url);
         UnityWebRequest webRequest = UnityWebRequest.Get(url);
         yield return webRequest.SendWebRequest();
 
@@ -66,6 +76,9 @@ public class SensorReadings : MonoBehaviour {
             string rawJson = webRequest.downloadHandler.text;
             if (rawJson != "[]") {
                 ProcessJson(rawJson);
+            } else {
+                // keep track of sensors with no data, so we know when we have retrieved everything
+                numEmpty += 1;
             }
         }
         void ProcessJson(string jsonString) {
@@ -90,6 +103,7 @@ public class SensorReadings : MonoBehaviour {
             } else {
                 print("No current actions implemented for sensor type "+sensor.sensor_type);
             }
+            numReadings += 1;
         }
     }
     
@@ -140,4 +154,16 @@ public class SensorReadings : MonoBehaviour {
         else print("Unknown reading type "+tempOrHumid);
         return new List<float>();
     }
+
+    void Update() {
+        // check if we have all the expected sensor readings
+        if (! retrievedAllReadings ) {
+            if (numReadings+numEmpty == numSensors) {
+                retrievedSensorReadingsEvent.Invoke();
+                retrievedAllReadings = true;
+            }
+        }
+
+    }
+
 }
