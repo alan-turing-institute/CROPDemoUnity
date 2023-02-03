@@ -9,60 +9,39 @@ using System;
 public class SensorMethods : MonoBehaviour
 {
     /* This module is attached to the sensor prefab found in the prefabs folder. 
-    the moment of the instantiation, it sends a request to the flask CROP app with the sensor id 
-    and gets the current readings.
-    example of request: 
-    "queries/getadvanticsysdata/1?range=20190201-20190201";
-
-        dependencies:
-        "sensors" empty Game object in main scene 
-
-        global variables: 
-        connection_string: query to get a list of sensors, along with sensor type.
-        sensor_gobj: the 3D model prefab which represents the sensor to be instantiated.
-        healthbar:
-        manabar:
-        graphs:
+    the moment of the instantiation, it asks the SensorReadings script to send a 
+    request to the flask CROP app with the sensor id 
+    and get the current readings.
     */
+    public GameObject graphPrefab;
 
-    //class to store the basic sensor data
+    //class to store the basic sensor data.  Provided by GetSensor when sensor is instantiated.
     public Sensor sensor;
     //all the readings for this sensor
-    public SensorReadingList sensorReadings;
+    SensorReadingList sensorReadings;
 
-    //3D object within sensor prefab
-    GameObject child_sensor_obj;
-    private string trhSensorType = "Aranet T&RH";
-    private string co2SensorType = "Aranet CO2";
-    private string airVelocitySensorType = "Aranet Air Velocity";
+    // use the camera position/direction to decide when to show UI
+    GameObject camera;
+    public float cameraRange = 1000f;
+    public float cameraAngleRange = 30f;
 
-    //healthbar sensor ID and type UI text
-    public Text sensor_id_obj;
-    public Text sensor_type_obj;
-    //text values
-    public Text temp_str_obj;
-    public Text humid_str_obj;
-    public Text co2_str_obj;
-    public Text airvelocity_str_obj;
-    private Color startcolor;
-    public GameObject readings_panel_obj;
-    public GameObject nodata_panel_obj;
-    bool active_panel = false;
-    bool has_recent_data = false;
+    //objects within sensor prefab that may be disabled or enabled.
+    GameObject sensorMesh;
+    GameObject sensorCanvas;
+    GameObject readingsPanel;
+    GameObject healthBar;
+    GameObject sensorId;
+    GameObject sensorType;
 
-    //plots of last 24hrs data:
-    public GameObject temperature_graph;
-    public GameObject humidity_graph;
-    public GameObject co2_graph;
-    public GameObject airvelocity_graph;
-
-    //Healthbars from previous month:
-    public GameObject healthbar;
-    public GameObject manabar;
+    // remember the starting colour so we can change with mouseover
+    private Color startColour;
+    // keep track of what we're showing
+    bool activeUI = false;
+    bool activeGraphs = false;
+    bool hasRecentData = false;
 
     void Start() {
         //Sets up the visualisations of the sensors
-        SetupUI();
 
         // get the script that holds the readings
         GameObject sensorsGameObj = GameObject.Find("Sensors");
@@ -72,45 +51,62 @@ public class SensorMethods : MonoBehaviour
         }
         SensorReadings sensorReadingsScript = sensorsGameObj.GetComponent<SensorReadings>();
         sensorReadings = sensorReadingsScript.GetAllReadingsForSensorId(sensor.sensor_id, sensor.sensor_type);
+        // find the mesh and canvas GameObjects
+        sensorMesh = transform.Find("SensorMesh").gameObject;
+        sensorCanvas = transform.Find("SensorCanvas").gameObject;
+        // find the panel that will contain the graphs
+        readingsPanel = transform.Find("SensorCanvas/SensorDisplay/ReadingsPanel").gameObject;
+        //stores the original color so that it can go back to original after mouse over. 
+        startColour = sensorMesh.GetComponent<Renderer>().material.color;
+        // set the text for sensor type and id 
+        sensorType = sensorCanvas.transform.Find("SensorDisplay/SensorType").gameObject;
+        sensorId = sensorCanvas.transform.Find("SensorDisplay/SensorID").gameObject;
+        healthBar = sensorCanvas.transform.Find("SensorDisplay/HealthBar").gameObject;
+        // find the camera GameObject
+        camera = GameObject.Find("PlayerCamera");
+        SetupUI();
         //print("In SensorMethods start - length of readings for "+sensor.sensor_id+" is "+sensorReadings.readingList.Count);
-        DisplayCurrentReadings(sensorReadings);
-        DisplayDailyReadings(sensorReadings);
-        DisplayMonthlyHealthbar(sensorReadings, 4080);
+        //DisplayCurrentReadings(sensorReadings);
+        //DisplayDailyReadings(sensorReadings);
+        //DisplayMonthlyHealthbar(sensorReadings, 4080);
     }
 
-    void SetupUI() {
-        /*Function to set up the text visual elements of the 3D sensors*/
+    public void SetupUI() {
+        Text typeText = sensorType.GetComponent<Text>();
+        typeText.text = sensor.sensor_type;
+        GameObject sensorIdText = sensorId.transform.Find("SensorIDText").gameObject;
+        Text idText = sensorIdText.GetComponent<Text>();
+        idText.text = sensor.aranet_code;
+        // to start off with, hide graphs and UI
+        HideUI();
+        HideGraphs();
+    }
 
-        //gets gameobject from sensor prefab - TODO clean this up!
-        child_sensor_obj = this.transform.GetChild(1).GetChild(0).GetChild(1).gameObject;
 
-        //stores the original color so that it can go back to original after mouse over. 
-        startcolor = child_sensor_obj.GetComponent<Renderer>().material.color;
+    public void HideGraphs() {
+        readingsPanel.SetActive(false);
+        activeGraphs = false;
+    }
 
-        //Display sensor type and id in UI text based on sensor properties
-        //from instantiation:
-        sensor_id_obj.text = sensor.aranet_code.ToString();
-        sensor_type_obj.text = sensor.sensor_type.ToUpper();
-        // start off with the panel inactive.
-        readings_panel_obj.SetActive(false);
-        nodata_panel_obj.SetActive(false);
-        active_panel = false;
+    public void DisplayGraphs() {
+       readingsPanel.SetActive(true);
+       activeGraphs = true;
     }
 
     public void HideUI() {
-        GameObject lookAt = transform.Find("lookat").gameObject;
-        lookAt.SetActive(false);
-        GameObject canvas = transform.Find("Canvas").gameObject;
-        canvas.SetActive(false);
+        sensorId.SetActive(false);
+        sensorType.SetActive(false);
+        healthBar.SetActive(false);
+        activeUI = false;
     }
 
     public void DisplayUI() {
-        GameObject lookAt = transform.Find("lookat").gameObject;
-        lookAt.SetActive(true);
-        GameObject canvas = transform.Find("Canvas").gameObject;
-        canvas.SetActive(true);
+        sensorId.SetActive(true);
+        sensorType.SetActive(true);
+        healthBar.SetActive(true); 
+        activeUI = true;     
     }
-
+/*
     void DisplayCurrentReadings(SensorReadingList sensorReadings) {
         print("In DisplayCurrentReadings");
         print("sensor_type is "+sensor.sensor_type);
@@ -302,23 +298,23 @@ public class SensorMethods : MonoBehaviour
         }
         print("At end of DisplayMonthlyHealthbar");
     }
-
+*/
     ////////////Mouse Controls////////////
     void OnMouseOver() {
         //If your mouse hovers over the GameObject with the script attached, output this message
-        child_sensor_obj.GetComponent<Renderer>().material.color = Color.yellow;
+        sensorMesh.GetComponent<Renderer>().material.color = Color.yellow;
     }
 
     void OnMouseExit() {
         //The mouse is no longer hovering over the GameObject so output this message each frame
-        child_sensor_obj.GetComponent<Renderer>().material.color = startcolor;
+        sensorMesh.GetComponent<Renderer>().material.color = startColour;
     }
-
+/*
     void OnMouseDown() {
-        /*Show/hide graphs on sensor click*/
+        // show/hide graphs on sensor click
         print("On mouse down");
         
-        if (active_panel == true) {
+        if (activeanel == true) {
             nodata_panel_obj.SetActive(false);
             readings_panel_obj.SetActive(false);
             active_panel = false;
@@ -331,4 +327,12 @@ public class SensorMethods : MonoBehaviour
             active_panel = true;
         }
     }
+    */
+    void Update() {
+        float distanceToCamera = Vector3.Distance(camera.transform.position, sensorMesh.transform.position);
+        if (distanceToCamera < cameraRange) {
+            if (! activeUI) DisplayUI();
+        } else if (activeUI) HideUI();
+    } 
+
 }

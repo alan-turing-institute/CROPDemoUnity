@@ -19,27 +19,20 @@ public class GetSensors : MonoBehaviour
     */
 
     public string connection_string;
-    public GameObject sensor_trh;
-    public GameObject sensor_co2;
-    public GameObject sensor_airvelocity;
+    public GameObject sensorPrefab;
+    SensorReadings sensorReadingsScript;
+   
     // hold a dictionary of Sensor objects, keyed by sensorID
     public Dictionary<int, Sensor> sensorDict = new Dictionary<int, Sensor>();
     // keep track of sensor location strings by zone and by sensorID
     private Dictionary<string, Dictionary<int, string> > sensorLocationsByZone = new Dictionary<string, Dictionary<int, string> >();
 
     void Start() {
-        /* The coroutine is the object within unity that allows to start a near parallel action
-        When using StartCoroutine, unity creates a new object of type Coroutine, 
-        this object performs some action and then returns a IEnumerator object (or empty)
-        Coroutine is a Unity engine class while IEnumerator belongs to the .NET.*/
-
-        //The folowing starts a coroutine to send a request to the connection string
-        //once data are received, they are being tagged into the instantiated "sensors". 
+        sensorReadingsScript = GetComponent<SensorReadings>();
+        sensorReadingsScript.connection_string = connection_string;
         print("In GetSensors::Start() connection_string is "+connection_string);
         StartCoroutine(GetJson(connection_string+"/getallsensors"));
-
-        //excutes given function with 1f delay after start
-        //Invoke("instantiate_sensors", 1f        }
+        
     }
 
     public IEnumerator GetJson(string url) {
@@ -96,8 +89,7 @@ public class GetSensors : MonoBehaviour
 
         List<string> sensorTypeList = new List<string>();
 
-        foreach (var sensor in sensorObjects.sensorList)
-        {
+        foreach (var sensor in sensorObjects.sensorList) {
             sensorDict[sensor.sensor_id] = sensor;
             if ((sensor.sensor_type != "Aranet T&RH") &&
                 (sensor.sensor_type != "Aranet CO2") &&
@@ -112,13 +104,44 @@ public class GetSensors : MonoBehaviour
         InstantiateSensors(sensorObjects);
     }
 
+    void InstantiateSensor(Sensor sensor, string sensorLocation) {
+        GameObject newSensor;
+        print("Instantiating "+sensor.sensor_type+" sensor "+sensor.sensor_id+" at location "+sensorLocation);  
+        Vector3 location = GetGlobalSensorLocation(sensor.zone, sensorLocation, sensor.shelf);   
+        newSensor = Instantiate(sensorPrefab, location, Quaternion.identity); 
+        newSensor.name = "sensor_"+sensor.aranet_code.ToString();
+        //find parent object
+        GameObject parentSensor = GameObject.Find(sensor.sensor_type);
+        if (parentSensor == null ) {
+            print("Couldnt find parent sensor "+sensor.sensor_type);
+            return;
+        }
+        // set new sensor as child of parent object
+        newSensor.transform.parent = parentSensor.transform;
+        // We want the SensorCanvas child to be inactive by default, while the sensorMesh
+        // should be active.
+        GameObject sensorCanvas = newSensor.transform.Find("SensorCanvas").gameObject;
+        GameObject sensorMesh = newSensor.transform.Find("SensorMesh").gameObject;
+         // set the sensor's Canvas to scale with screen size
+        UnityEngine.UI.CanvasScaler cs = sensorCanvas.GetComponent<UnityEngine.UI.CanvasScaler>();
+        cs.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        //sensorCanvas.SetActive(false);
+        //sensorMesh.SetActive(true);
+        //Set sensor properties to instantiated sensor
+        SensorMethods sensorMethodsScript = newSensor.GetComponent<SensorMethods>();
+        sensorMethodsScript.sensor = sensor;
+
+        return;
+    }
+
+
     void InstantiateSensors(SensorList sensorObjects) {
         /* This function, instantiates 3D sensor prefabs in scene based on sensor type and 
         location of the sensor and assigns the properties (sensor type, sensor id, location and 
         installation date) to each one*/
-
-        SensorReadings sensorReadingsScript = GetComponent<SensorReadings>();
-        sensorReadingsScript.connection_string = connection_string;
+        print("In InstantiateSensors, have list of "+sensorObjects.sensorList.Count);
+        
+        
         // create a dict of sensor locations for passing to the heatmap calculator
         Dictionary<int, string> sensorLocations = new Dictionary<int, string>();
         // create a dict of sensors by type and zone to pass to the main menu panel.
@@ -135,7 +158,7 @@ public class GetSensors : MonoBehaviour
             if (! sensorZones.ContainsKey(sensorType)) {
                 sensorZones[sensorType] = new Dictionary<string, List<string> >();
             }
-            // why can't we have a consistend set of zones ? :(
+            // why can't we have a consistent set of zones ? :(
             string zone = sensor.zone;
             
             // sensorZones is used by the SensorPanel script to toggle on or off sensor displays
@@ -144,17 +167,14 @@ public class GetSensors : MonoBehaviour
             }
             sensorZones[sensorType][zone].Add(sensor.aranet_code.ToString());
             // get the location in 3D space
-            Vector3 location = GetGlobalSensorLocation(zone, sensorLocation, sensor.shelf);
+            
             // instantiate the appropriate type of GameObject
-            GameObject newSensor;
-            if (sensor.sensor_type == "Aranet T&RH") {
-                newSensor = Instantiate(sensor_trh, location, Quaternion.identity);
-            } else if  (sensor.sensor_type == "Aranet CO2") {
-                newSensor = Instantiate(sensor_co2, location, Quaternion.identity);
-            } else if (sensor.sensor_type == "Aranet Air Velocity") {
-                newSensor = Instantiate(sensor_airvelocity, location, Quaternion.identity);
-            } else continue;
-            newSensor.name = "sensor_"+sensor.aranet_code.ToString();
+            
+            if ((sensor.zone == "Retired") || (sensor.zone == "N/A") || (sensor.zone == "Not applicable") ||
+            (sensor.zone == "Unknown") || (sensor.zone == "Not in use") || (sensor.zone == null)) continue;
+            if (! sensor.zone.Contains("Tunnel")) continue;
+            InstantiateSensor(sensor, sensorLocation);
+            
             numSensors += 1;
             // sensorLocations is used by the CalcHeatmaps script.
             // So far, only use T&RH sensors
@@ -165,24 +185,9 @@ public class GetSensors : MonoBehaviour
                 sensorLocationsByZone[zone][sensor.sensor_id] = sensorLocation;
                 // sensorLocations[sensor.sensor_id] = sensorLocation;
             }
-            //find parent object
-            GameObject parentSensor = GameObject.Find(sensor.sensor_type);
-            if (parentSensor == null ) {
-                print("Couldnt find parent sensor "+sensor.sensor_type);
-                continue;
-            }
-            // set new sensor as child of parent object
-            newSensor.transform.parent = parentSensor.transform;
-
-            //Set sensor properties to instantiated sensor
-        //TEMPORARY    newSensor.GetComponent<SensorMethods>().sensor = sensor;
+            
             sensorReadingsScript.sensors.Add(sensor);
-            // set the sensor's Canvas to scale with screen size
-            GameObject sensorCanvas = newSensor.transform.Find("Canvas").gameObject;
-            UnityEngine.UI.CanvasScaler cs = sensorCanvas.GetComponent<UnityEngine.UI.CanvasScaler>();
-            cs.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            // have all sensors hidden when they are first created.
-            newSensor.SetActive(false);
+           
         }
         // tell the SensorReadings script to fetch its data, and how many sensors to expect
         sensorReadingsScript.numSensors = numSensors;

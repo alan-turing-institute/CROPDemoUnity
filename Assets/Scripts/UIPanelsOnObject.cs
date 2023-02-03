@@ -24,8 +24,8 @@ public class UIPanelsOnObject : MonoBehaviour
     void Update()
     {
         //get position of object on canvas
-        Vector3 canvasPos = playerCam.WorldToScreenPoint(this.transform.position);
-        //Vector3 canvasPos = playerCam.WorldToScreenPoint(sensorMesh.transform.position);
+        //Vector3 canvasPos = playerCam.WorldToScreenPoint(this.transform.position);
+        Vector3 canvasPos = playerCam.WorldToScreenPoint(sensorMesh.transform.position);
         //correct z position
         Vector3 pos2d = new Vector3(canvasPos.x, canvasPos.y, 0);
         label.transform.position = pos2d;

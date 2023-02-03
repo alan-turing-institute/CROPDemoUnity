@@ -23,7 +23,7 @@ public class CreateGraphs : MonoBehaviour
         GameObject graphGO = Instantiate(graphPrefab);
         // make it a child of the ReadingsPanel GameObject
         graphGO.transform.SetParent(transform);
-        graphGO.GetComponent<RectTransform>().localPosition = new Vector2(0,-100*graphs.Count);
+        graphGO.GetComponent<RectTransform>().localPosition = new Vector2(0,-90*graphs.Count);
         SensorGraph sgScript = graphGO.GetComponent<SensorGraph>();
         sgScript.SetTitle(title);
         sgScript.SetUnits(units);
@@ -32,7 +32,7 @@ public class CreateGraphs : MonoBehaviour
         sgScript.ShowGraph(values, maxVal);
         graphs.Add(graphGO);
 
-        rectTransform.sizeDelta = new Vector2(150, 100*graphs.Count);
+        rectTransform.sizeDelta = new Vector2(130, 90*graphs.Count);
     }
 
 
