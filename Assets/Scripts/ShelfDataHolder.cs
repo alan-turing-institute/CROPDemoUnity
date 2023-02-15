@@ -39,7 +39,7 @@ public class ShelfDataHolder : MonoBehaviour
         cropDataScript.retrievedCropDataEvent.AddListener(GotCropData);
 
         ResetShelfText();
-        string url = "http://localhost:5000/queries/closest_trh_sensors";
+        string url = "http://cropapptest.azurewebsites.net/queries/closest_trh_sensors";
         StartCoroutine(GetNearestSensorData(url));
         
     }
@@ -102,7 +102,7 @@ public class ShelfDataHolder : MonoBehaviour
             ShelfData sd = new ShelfData();
             LocationMaker lm = new LocationMaker();
             sd.location = lm.LocationFromString(entry.Key);
-            print("FILLING SHELF DATA FOR "+entry.Key);
+          //  print("FILLING SHELF DATA FOR "+entry.Key);
             int nearestSensorID = entry.Value;
             sd.sensor_id = nearestSensorID;
             // find the details of the nearest sensor
@@ -128,7 +128,7 @@ public class ShelfDataHolder : MonoBehaviour
             if (cropDataScript.cropDataDict.ContainsKey(columnName)) {
                 Dictionary<int, CropData> shelfCropDict = cropDataScript.cropDataDict[columnName];
                 int shelfID = sd.location.shelf;
-                print("Trying to get cropData for column "+columnName+" "+shelfID);
+               // print("Trying to get cropData for column "+columnName+" "+shelfID);
                 if (shelfCropDict.ContainsKey(shelfID)) {
                     sd.cropData.cropList.Add(shelfCropDict[shelfID]);
                 }

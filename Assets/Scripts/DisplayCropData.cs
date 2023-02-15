@@ -21,8 +21,8 @@ public class DisplayCropData : MonoBehaviour
 
     public UnityEvent retrievedCropDataEvent = new UnityEvent();
 
-    ///string url = "https://cropapptest.azurewebsites.net/queries/batchesinfarm";
-    string url = "http://localhost:5000/queries/batchesinfarm";
+    string url = "https://cropapptest.azurewebsites.net/queries/batchesinfarm";
+    
 
     // make a list of colours which we can use for crops
     List<Color> cropColourList = new List<Color>

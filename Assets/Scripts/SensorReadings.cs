@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Events;
@@ -107,12 +108,113 @@ public class SensorReadings : MonoBehaviour {
         }
     }
     
-    public SensorReadingList GetAllReadingsForSensorId(int sensorId, string sensorType) {
+    public SensorReadingList GetAllReadingsForSensorId(int sensorId) {
         if (! readingsDict.ContainsKey(sensorId) ) {
-                return null;
-            }
+            print("SensorID "+sensorId+" not in keys of readingsDict");
+            return null;    
+        }
         return readingsDict[sensorId];
     }
+
+    public List<List<float> > GetOneDayReadingsForSensorId(int sensorId, string sensorType) {
+        SensorReadingList readingList = GetAllReadingsForSensorId(sensorId);
+        System.DateTime oneDayAgo = System.DateTime.Now.AddDays(-1);
+        List<List<float>> outputList = new List<List<float> >();
+        if (sensorType == trhSensorType) {
+            List<float> temperatures = new List<float>();
+            List<float> humidities = new List<float>();
+            // create some dictionaries that we will use to calculate one average value per hour
+            Dictionary<int, List<float>> tempDict = new Dictionary<int, List<float>>();
+            Dictionary<int, List<float>> humidDict = new Dictionary<int, List<float>>();
+            for (int i=-24; i<0; i++) {
+                tempDict[i] = new List<float>();
+                humidDict[i] = new List<float>();
+            }
+            // populate dictionary keyed by how many hours in the past,
+            // with each value being a list of readings in that hour
+            foreach (TemperatureHumidityReading reading in ((TempRelHumReadingList)readingList).readingList) {
+                System.DateTime dt = System.Convert.ToDateTime(reading.timestamp);
+                if (dt < oneDayAgo) continue;
+                for (int i=-24; i<0; i++) {
+                    if ((dt > System.DateTime.Now.AddHours(i) ) &&
+                        (dt < System.DateTime.Now.AddHours(i+1)) ) {
+                            tempDict[i].Add(reading.temperature);
+                            humidDict[i].Add(reading.humidity);
+                    }
+                }
+            }
+            // now take the average of the values for each hour
+            for (int i=-24; i<0; i++) {
+                if (tempDict[i].Count > 0) {
+                    temperatures.Add(tempDict[i].Average());
+                    humidities.Add(humidDict[i].Average());
+                } else {
+                    temperatures.Add(0f);
+                    humidities.Add(0f);
+                }
+            }
+            outputList.Add(temperatures);
+            outputList.Add(humidities);
+        } else if (sensorType == co2SensorType) {
+           List<float> co2 = new List<float>();
+            // create some dictionaries that we will use to calculate one average value per hour
+            Dictionary<int, List<float>> co2Dict = new Dictionary<int, List<float>>();
+            for (int i=-24; i<0; i++) {
+                co2Dict[i] = new List<float>();
+            }
+            // populate dictionary keyed by how many hours in the past,
+            // with each value being a list of readings in that hour
+            foreach (CO2Reading reading in ((CO2ReadingList)readingList).readingList) {
+                System.DateTime dt = System.Convert.ToDateTime(reading.timestamp);
+                if (dt < oneDayAgo) continue;
+                for (int i=-24; i<0; i++) {
+                    if ((dt > System.DateTime.Now.AddHours(i) ) &&
+                        (dt < System.DateTime.Now.AddHours(i+1)) ) {
+                            co2Dict[i].Add(reading.co2);
+                    }
+                }
+            }
+            // now take the average of the values for each hour
+            for (int i=-24; i<0; i++) {
+                if (co2Dict[i].Count > 0) {
+                    co2.Add(co2Dict[i].Average());
+                } else {
+                    co2.Add(0f);
+                }
+            }
+            outputList.Add(co2);            
+        } else if (sensorType == airVelocitySensorType) {
+           List<float> airvelocities = new List<float>();
+            // create some dictionaries that we will use to calculate one average value per hour
+            Dictionary<int, List<float>> avDict = new Dictionary<int, List<float>>();
+            for (int i=-24; i<0; i++) {
+                avDict[i] = new List<float>();
+            }
+            // populate dictionary keyed by how many hours in the past,
+            // with each value being a list of readings in that hour
+            foreach (AirVelocityReading reading in ((AirVelocityReadingList)readingList).readingList) {
+                System.DateTime dt = System.Convert.ToDateTime(reading.timestamp);
+                if (dt < oneDayAgo) continue;
+                for (int i=-24; i<0; i++) {
+                    if ((dt > System.DateTime.Now.AddHours(i) ) &&
+                        (dt < System.DateTime.Now.AddHours(i+1)) ) {
+                            avDict[i].Add(reading.air_velocity);
+                    }
+                }
+            }
+            // now take the average of the values for each hour
+            for (int i=-24; i<0; i++) {
+                if (avDict[i].Count > 0) {
+                    airvelocities.Add(avDict[i].Average());
+                } else {
+                    airvelocities.Add(0f);
+                }
+            }
+            outputList.Add(airvelocities);            
+        }
+        return outputList;
+    }
+
 
     public SensorReading GetLatestReadingForSensorId(int sensorId, string sensorType) {
         if (! readingsDict.ContainsKey(sensorId) ) {

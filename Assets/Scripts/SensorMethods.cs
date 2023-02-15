@@ -24,14 +24,23 @@ public class SensorMethods : MonoBehaviour
     GameObject camera;
     public float cameraRange = 1000f;
     public float cameraAngleRange = 30f;
+    public bool beingLookedAt = false;
 
     //objects within sensor prefab that may be disabled or enabled.
     GameObject sensorMesh;
     GameObject sensorCanvas;
     GameObject readingsPanel;
+    GameObject noDataPanel;
     GameObject healthBar;
     GameObject sensorId;
     GameObject sensorType;
+
+    string trhSensorType = "Aranet T&RH";
+    string co2SensorType = "Aranet CO2";
+    string airVelocitySensorType = "Aranet Air Velocity";
+
+    CreateGraphs createGraphsScript;
+    SensorReadings sensorReadingsScript;
 
     // remember the starting colour so we can change with mouseover
     private Color startColour;
@@ -39,6 +48,8 @@ public class SensorMethods : MonoBehaviour
     bool activeUI = false;
     bool activeGraphs = false;
     bool hasRecentData = false;
+
+    int numDataPoints = -1; // so we can tell when we have first read the data
 
     void Start() {
         //Sets up the visualisations of the sensors
@@ -49,13 +60,14 @@ public class SensorMethods : MonoBehaviour
             print("Couldn't find 'Sensors' GameObject");
             return;
         }
-        SensorReadings sensorReadingsScript = sensorsGameObj.GetComponent<SensorReadings>();
-        sensorReadings = sensorReadingsScript.GetAllReadingsForSensorId(sensor.sensor_id, sensor.sensor_type);
+        sensorReadingsScript = sensorsGameObj.GetComponent<SensorReadings>();
         // find the mesh and canvas GameObjects
         sensorMesh = transform.Find("SensorMesh").gameObject;
         sensorCanvas = transform.Find("SensorCanvas").gameObject;
         // find the panel that will contain the graphs
         readingsPanel = transform.Find("SensorCanvas/SensorDisplay/ReadingsPanel").gameObject;
+        // the panel that will display if there is no data
+        noDataPanel = transform.Find("SensorCanvas/SensorDisplay/NoDataPanel").gameObject;
         //stores the original color so that it can go back to original after mouse over. 
         startColour = sensorMesh.GetComponent<Renderer>().material.color;
         // set the text for sensor type and id 
@@ -64,6 +76,8 @@ public class SensorMethods : MonoBehaviour
         healthBar = sensorCanvas.transform.Find("SensorDisplay/HealthBar").gameObject;
         // find the camera GameObject
         camera = GameObject.Find("PlayerCamera");
+        // get the script that will create the graphs
+        createGraphsScript = readingsPanel.GetComponent<CreateGraphs>();
         SetupUI();
         //print("In SensorMethods start - length of readings for "+sensor.sensor_id+" is "+sensorReadings.readingList.Count);
         //DisplayCurrentReadings(sensorReadings);
@@ -82,15 +96,60 @@ public class SensorMethods : MonoBehaviour
         HideGraphs();
     }
 
+    public void DisplayNoDataPanel() {
+        readingsPanel.SetActive(false);
+        noDataPanel.SetActive(true);
+    }
+
+    public void HideNoDataPanel() {
+        readingsPanel.SetActive(false);
+        noDataPanel.SetActive(false);
+    }
 
     public void HideGraphs() {
+        print("Hiding graphs for "+gameObject.name);
         readingsPanel.SetActive(false);
+        noDataPanel.SetActive(false);
         activeGraphs = false;
     }
 
+ 
+
     public void DisplayGraphs() {
-       readingsPanel.SetActive(true);
-       activeGraphs = true;
+        print("Displaying graphs for "+gameObject.name);
+        sensorReadings = sensorReadingsScript.GetAllReadingsForSensorId(sensor.sensor_id);
+        if (sensorReadings == null) print("Sensor readings for "+sensor.sensor_id+" is NULL!");        
+        activeGraphs = true;
+        // add graphs if necessary
+        readingsPanel.SetActive(true);
+        if (readingsPanel.transform.childCount == 0) {
+            numDataPoints = AddGraphs();
+        }
+        if (numDataPoints ==0) DisplayNoDataPanel();
+        
+        
+    }
+
+    public int AddGraphs() {
+        List<List<float> > values = sensorReadingsScript.GetOneDayReadingsForSensorId(sensor.sensor_id, sensor.sensor_type);
+        if (sensor.sensor_type == trhSensorType) {
+            List<float> tvals = values[0];
+            List<float> hvals = values[1];
+            createGraphsScript.AddGraph("Temperature", "°C", tvals);
+            createGraphsScript.AddGraph("Humidity", "%", hvals);
+            return tvals.Count;
+        } else if (sensor.sensor_type == co2SensorType) {
+            List<float> co2vals = values[0];
+            createGraphsScript.AddGraph("CO2", "ppm", co2vals);
+            return co2vals.Count;
+        } else if (sensor.sensor_type == "Aranet Air Velocity") {
+            List<float> avvals = values[0];
+            createGraphsScript.AddGraph("Air Velocity", "m/s", avvals);
+            return avvals.Count;
+        } else {
+            print("Unknown sensor type "+sensor.sensor_type);
+            return 0;
+        }
     }
 
     public void HideUI() {
@@ -330,9 +389,14 @@ public class SensorMethods : MonoBehaviour
     */
     void Update() {
         float distanceToCamera = Vector3.Distance(camera.transform.position, sensorMesh.transform.position);
-        if (distanceToCamera < cameraRange) {
-            if (! activeUI) DisplayUI();
-        } else if (activeUI) HideUI();
+        if ((distanceToCamera < cameraRange) && beingLookedAt) {
+            if (! activeUI) {
+                DisplayUI();
+              
+            }
+        } else if (activeUI) {
+            HideUI();
+        }
     } 
 
 }

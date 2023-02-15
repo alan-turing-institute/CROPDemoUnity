@@ -8,4 +8,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/FarmScene.unity
     guid: b967c30df0f3845c397bf66936af86e2
-  m_configObjects: {}
+  m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: c8f8074c357b24c6c864eb1831965507, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 94f541d2cd26341a598e16756ff3a84e, type: 2}
