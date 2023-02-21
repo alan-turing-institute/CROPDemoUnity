@@ -73,7 +73,7 @@ public class PlayerCam : MonoBehaviour {
             if (! mouseButtonDown) {
                 mouseButtonDown = true;
                 if (infoToShow == InfoType.Shelf) {
-                    shelfDataHolder.ShowInfoPanel(lookingAt == null);
+                    shelfDataHolder.ShowInfoPanel(lookingAt != null);
                 } else {
                   sensorScript.DisplayGraphs();
                 }
@@ -84,7 +84,7 @@ public class PlayerCam : MonoBehaviour {
                 if (infoToShow == InfoType.Shelf) {
                     shelfDataHolder.HideInfoPanel();
                 } else {
-                  sensorScript.HideGraphs();
+                    sensorScript.HideGraphs();
                 }
             }
         }

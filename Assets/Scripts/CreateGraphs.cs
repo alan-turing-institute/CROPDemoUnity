@@ -27,7 +27,7 @@ public class CreateGraphs : MonoBehaviour
         SensorGraph sgScript = graphGO.GetComponent<SensorGraph>();
         sgScript.SetTitle(title);
         sgScript.SetUnits(units);
-        sgScript.SetValue(values[0].ToString());
+        sgScript.SetValue(values[0].ToString("#.##"));
         float maxVal = values.Max() * 1.4f;
         sgScript.ShowGraph(values, maxVal);
         graphs.Add(graphGO);

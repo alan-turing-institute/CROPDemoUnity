@@ -136,6 +136,7 @@ public class ShelfDataHolder : MonoBehaviour
 
             shelfDataDict[entry.Key] = sd;
         }
+        print("Have all shelf data");
         haveAllShelfData = true;
     }
 
@@ -171,6 +172,7 @@ public class ShelfDataHolder : MonoBehaviour
             text += ShelfDataToText(shelfDataDict[shelfID]);
         }
         infoPanelText.GetComponent<Text>().text = text;
+        //print("Updating info panel for "+shelfID);
         return;
     }
 
