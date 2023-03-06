@@ -21,7 +21,7 @@ public class DisplayCropData : MonoBehaviour
 
     public UnityEvent retrievedCropDataEvent = new UnityEvent();
 
-    string url = "https://cropapptest.azurewebsites.net/queries/batchesinfarm";
+    string url = "https://cropapptest.azurewebsites.net/queries/batchesinfarm_synthetic";
     
 
     // make a list of colours which we can use for crops
@@ -44,7 +44,14 @@ public class DisplayCropData : MonoBehaviour
     // create a dict, keyed by crop name, and fill it as we parse the cropdata
     // from the API, picking out colours from the above list as we go.
     // This will then define the crop-type colour scale (and legend).
-    Dictionary<string, Color> cropColourDict = new Dictionary<string, Color>();
+    Dictionary<string, Color> cropColourDict = new Dictionary<string, Color>{
+        {"unknown/none", new Color(0.75F, 0.75F, 0.75F, 1)},
+        {"red_cabbage", new Color(0.75F, 0.15F, 0.15F, 1)},
+        {"purple radish", new Color(0.6F, 0.05F, 0.7F, 1)},
+        {"garlic chive", new Color(0.2F, 0.75F, 0.3F, 1)},
+        {"peashoots", new Color(0.3F, 0.85F, 0.1F, 1)}
+    };
+    //Dictionary<string, Color> cropColourDict = new Dictionary<string, Color>();
     
 
     // how many days away from harvest are we?  This dictionary will be used
@@ -87,10 +94,6 @@ public class DisplayCropData : MonoBehaviour
         StartCoroutine(GetCropData(url));
     }
 
-    void OnEnable() {
-        Start();
-    }
-
     /// get crop data from API
     public IEnumerator  GetCropData(string url) {
       
@@ -124,9 +127,11 @@ public class DisplayCropData : MonoBehaviour
 
     void ProcessCropData(CropDataList crops) {
         // first add 'unknown/none' to cropColourDict
-        cropColourDict["unknown/none"] = cropColourList[0];
+       // cropColourDict["unknown/none"] = cropColourList[0];
         print("Found cropList of length "+crops.cropList.Count);
         foreach (CropData cd in crops.cropList) {
+           // if (cd.aisle != "B") continue;
+            //if (cd.column > 4) continue;
             string columnName = cd.aisle+"-"+cd.column.ToString();
             if (! cropDataDict.ContainsKey(columnName) ) {
                 cropDataDict[columnName] = new Dictionary<int, CropData>();
@@ -136,10 +141,10 @@ public class DisplayCropData : MonoBehaviour
             cropDataDict[columnName][shelf] = sanitizedCropData;
             string cropType = sanitizedCropData.crop_type_name;
             print("Adding crop data to "+columnName+" "+shelf);
-            if (! cropColourDict.ContainsKey(cropType)) {
-                // add the next colour from the list
-                cropColourDict[cropType] = cropColourList[cropColourDict.Count];
-            }
+           // if (! cropColourDict.ContainsKey(cropType)) {
+            //    // add the next colour from the list
+            //    cropColourDict[cropType] = cropColourList[cropColourDict.Count];
+           // }
         }
         retrievedCropDataEvent.Invoke();
     }
@@ -230,6 +235,7 @@ public class DisplayCropData : MonoBehaviour
     }
 
     void HandleCropData() {
+        print("RETRIEVED CROP DATA - will now colour by crop type");
         retrievedCropDataEvent.RemoveListener(HandleCropData);
         ColourAllShelvesCropType();
     }

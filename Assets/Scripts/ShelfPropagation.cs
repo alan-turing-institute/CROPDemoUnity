@@ -66,6 +66,7 @@ public class ShelfPropagation : MonoBehaviour
             CropData cropData = entry.Value;
             Transform shelfTransform = this.transform.GetChild(shelfIndex); 
             shelfTransform.GetComponent<Renderer>().material.color = cropColourDict[cropData.crop_type_name];
+            print("Coloring shelf "+name+"-"+entry.Key+" with crop type "+cropData.crop_type_name);
         }   
         //print("COLOURING COLUMN "+gameObject.name+" BY CROP TYPE");
     }
