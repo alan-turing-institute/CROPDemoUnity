@@ -6,8 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/Scenes/FarmScene.unity
-    guid: b967c30df0f3845c397bf66936af86e2
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 0
     path: Assets/Samples/XR Interaction Toolkit/2.2.0/Starter Assets/DemoScene.unity
     guid: 319dafa5c80f29f428dc1e0d03f04177
