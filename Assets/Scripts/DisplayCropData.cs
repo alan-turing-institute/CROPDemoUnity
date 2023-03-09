@@ -93,10 +93,6 @@ public class DisplayCropData : MonoBehaviour
         StartCoroutine(GetCropData(url));
     }
 
-    void OnEnable() {
-        Start();
-    }
-
     /// get crop data from API
     public IEnumerator  GetCropData(string url) {
       
@@ -141,7 +137,7 @@ public class DisplayCropData : MonoBehaviour
             CropData sanitizedCropData = SanitizeCropName(cd);
             cropDataDict[columnName][shelf] = sanitizedCropData;
             string cropType = sanitizedCropData.crop_type_name;
-            print("Adding crop data to "+columnName+" "+shelf);
+        //    print("Adding crop data to "+columnName+" "+shelf);
           //  if (! cropColourDict.ContainsKey(cropType)) {
                 // add the next colour from the list
             //    cropColourDict[cropType] = cropColourList[cropColourDict.Count];
@@ -241,6 +237,7 @@ public class DisplayCropData : MonoBehaviour
     }
 
     void ColourAllShelvesCropType() {
+        print("Colouring all shelves according to crop type");
     //    legendPanel.SetActive(true);
     //    legendGenerator.itemDict = cropColourDict;
      //   legendGenerator.DrawLegend("Crop types");   

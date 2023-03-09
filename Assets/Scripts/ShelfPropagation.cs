@@ -29,8 +29,8 @@ public class ShelfPropagation : MonoBehaviour
     }
 
     //void HandleCropData() {
-      //  cropDataScript.retrievedCropDataEvent.RemoveListener(HandleCropData);
-       // ColourShelvesCropType();
+     //   cropDataScript.retrievedCropDataEvent.RemoveListener(HandleCropData);
+    //   ColourShelvesCropType();
     //}
 
     void SetupShelves() {
@@ -59,13 +59,17 @@ public class ShelfPropagation : MonoBehaviour
     }
 
     public void ColourShelvesCropType() {
-        if (cropDataForColumn == null ) return;
+        if (cropDataForColumn == null ) {
+            print("null cropData for column "+gameObject.name);
+            return;
+        }
         foreach(KeyValuePair<int, CropData> entry in cropDataForColumn) {
             // shelves as children of transform will be numbered 0-3 not 1-4
             int shelfIndex = entry.Key - 1;
             CropData cropData = entry.Value;
             Transform shelfTransform = this.transform.GetChild(shelfIndex); 
             shelfTransform.GetComponent<Renderer>().material.color = cropColourDict[cropData.crop_type_name];
+            print("Colouring "+gameObject.name+shelfIndex+" for "+cropData.crop_type_name);
         }   
         //print("COLOURING COLUMN "+gameObject.name+" BY CROP TYPE");
     }

@@ -107,7 +107,7 @@ public class SensorMethods : MonoBehaviour
     }
 
     public void HideGraphs() {
-        print("Hiding graphs for "+gameObject.name);
+      //  print("Hiding graphs for "+gameObject.name);
         readingsPanel.SetActive(false);
         noDataPanel.SetActive(false);
         activeGraphs = false;
@@ -386,7 +386,7 @@ public class SensorMethods : MonoBehaviour
             active_panel = true;
         }
     }
-    */
+    
     void Update() {
         float distanceToCamera = Vector3.Distance(camera.transform.position, sensorMesh.transform.position);
         if ((distanceToCamera < cameraRange) && beingLookedAt) {
@@ -398,5 +398,6 @@ public class SensorMethods : MonoBehaviour
             HideUI();
         }
     } 
+    */
 
 }

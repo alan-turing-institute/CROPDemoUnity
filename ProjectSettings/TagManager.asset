@@ -3,15 +3,21 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Move
+  - Rotate180
+  - Rotate90Left
+  - Pause
+  - Rotate90Right
+  - aisle
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Shelf
   - Water
   - UI
-  - 
+  - Sensor
   - 
   - 
   - 
