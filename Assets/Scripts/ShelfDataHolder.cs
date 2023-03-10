@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 using UnityEngine.Events;
+using TMPro;
 
 using JsonSchema;
 
@@ -13,6 +14,11 @@ using JsonSchema;
 
 public class ShelfDataHolder : MonoBehaviour
 {
+    public Sprite redCabbageImage;
+    public Sprite garlicChiveImage;
+    public Sprite peashootImage;
+    public Sprite purpleRadishImage;
+    public Sprite noCropImage;
     //public GameObject infoPanel;
    // public GameObject infoPanelText;
 
@@ -31,6 +37,16 @@ public class ShelfDataHolder : MonoBehaviour
     // dictionary of shelfData, keyed by shelf location aisle-column-shelf
     Dictionary<string, ShelfData> shelfDataDict = new Dictionary<string, ShelfData>();
 
+    Dictionary<string, Sprite> cropImageDict = new Dictionary<string, Sprite>(); 
+
+    Dictionary<string, Color> cropColourDict = new Dictionary<string, Color>{
+        {"unknown/none", new Color(0.75F, 0.75F, 0.75F, 1)},
+        {"red_cabbage", new Color(0.75F, 0.15F, 0.15F, 1)},
+        {"purple radish", new Color(0.6F, 0.05F, 0.7F, 1)},
+        {"garlic chive", new Color(0.2F, 0.75F, 0.3F, 1)},
+        {"peashoots", new Color(0.3F, 0.85F, 0.1F, 1)}
+    };
+
     void Start() {
         // notify ourselves when the sensor and crop data has been retrieved by the relevant scripts
         sensorScript = sensorsGO.GetComponent<GetSensors>();
@@ -43,6 +59,14 @@ public class ShelfDataHolder : MonoBehaviour
         string url = "http://cropapptest.azurewebsites.net/queries/closest_trh_sensors";
         StartCoroutine(GetNearestSensorData(url));
         
+        // load image textures
+        {
+        cropImageDict["red_cabbage"] =  redCabbageImage;
+        cropImageDict["peashoots"] = peashootImage;
+        cropImageDict["garlic chive"] = garlicChiveImage;
+        cropImageDict["purple radish"] = purpleRadishImage;
+        cropImageDict["unknown/none"] = noCropImage;
+    };
     }
 
     void GotSensorData() {
@@ -112,6 +136,7 @@ public class ShelfDataHolder : MonoBehaviour
             if (sensorScript.sensorDict.ContainsKey(nearestSensorID)) {
                 sd.nearestSensor.sensorList.Add(sensorScript.sensorDict[nearestSensorID]);
             }
+           // print("Shelf "+entry.Key+" nearest sensor "+sd.sensor_id);
             // find the latest sensor reading for the nearest sensor
             sd.latestReading = new TempRelHumReadingList();
             sd.latestReading.readingList = new List<TemperatureHumidityReading>();
@@ -136,6 +161,38 @@ public class ShelfDataHolder : MonoBehaviour
             }
 
             shelfDataDict[entry.Key] = sd;
+        }
+        // fake shelf data for testing column F
+        for (int shelf=1; shelf<5; shelf++) {
+            string shelfName = "F-1-"+shelf.ToString();
+            ShelfData sd = new ShelfData();
+            sd.sensor_id = 27;
+            sd.nearestSensor = new SensorList();
+            sd.nearestSensor.sensorList = new List<Sensor>();
+            if (sensorScript.sensorDict.ContainsKey(sd.sensor_id)) {
+                sd.nearestSensor.sensorList.Add(sensorScript.sensorDict[sd.sensor_id]);
+            }
+            sd.latestReading = new TempRelHumReadingList();
+            sd.latestReading.readingList = new List<TemperatureHumidityReading>();
+            if (sensorReadingsScript.readingsDict.ContainsKey(sd.sensor_id)) {
+                TempRelHumReadingList readings = (TempRelHumReadingList)(sensorReadingsScript.readingsDict[sd.sensor_id]);
+                if (readings.readingList.Count > 0) {
+                    sd.latestReading.readingList.Add(readings.readingList[0]);
+                }
+            }
+            sd.cropData = new CropDataList();
+            sd.cropData.cropList = new List<CropData>();
+            // column name will be entry.Key 
+            string columnName = "A-1";
+            if (cropDataScript.cropDataDict.ContainsKey(columnName)) {
+                Dictionary<int, CropData> shelfCropDict = cropDataScript.cropDataDict[columnName];
+                int shelfID = shelf;
+               // print("Trying to get cropData for column "+columnName+" "+shelfID);
+                if (shelfCropDict.ContainsKey(shelfID)) {
+                    sd.cropData.cropList.Add(shelfCropDict[shelfID]);
+                }
+            }
+            shelfDataDict[shelfName] = sd;
         }
         print("Have all shelf data");
         haveAllShelfData = true;
@@ -166,79 +223,103 @@ public class ShelfDataHolder : MonoBehaviour
         }
         return text;
     }
-/*
-    public void UpdateInfoPanel(string shelfID) {
-        string text = "Shelf "+shelfID+"\n";
-        if (shelfDataDict.ContainsKey(shelfID)) {
-            text += ShelfDataToText(shelfDataDict[shelfID]);
-        }
-        infoPanelText.GetComponent<Text>().text = text;
-        //print("Updating info panel for "+shelfID);
-        return;
-    }
-
-    public void ToggleInfoPanel(bool pointingAtSomething=false) {
-        // only show the info panel if the cursor is over an object
-      //  print("Toggling the info panel");
-        if (pointingAtSomething && (! infoPanel.active)) {
-            infoPanel.SetActive(true);
-        } else {
-            infoPanel.SetActive(false);
-            ResetShelfText();
-        }
-    }
-*/
-    public void ShowShelfId(string shelfName) {
-        GameObject shelf = GameObject.Find(shelfName);
-        if (shelf != null) {
-            Transform idTrans = shelf.transform.Find(shelfName+"_Canvas/"+shelfName+"_Button/"+shelfName+"_IDText");
-            idTrans.gameObject.SetActive(true);
-        }
-
-    }
-
-   public void HideShelfId(string shelfName) {
-        GameObject shelf = GameObject.Find(shelfName);
-        if (shelf != null) {
-            Transform idTrans = shelf.transform.Find(shelfName+"_Canvas/"+shelfName+"_Button/"+shelfName+"_IDText");
-            idTrans.gameObject.SetActive(false);
-        }
-    }
-
-
-    public void ToggleInfoPanel(GameObject button) {
-        string shelfName = button.name.Split("_")[0];
-        if (currentlyActiveShelf == null) {
-            // no info panel currently showing - show this one!
-            ShowInfoPanel(shelfName);
-            HideShelfId(shelfName);
-            currentlyActiveShelf = shelfName;
-        } else if (currentlyActiveShelf == shelfName) {
-            // this info panel currently showing - hide it!
-            HideInfoPanel(shelfName);
-            ShowShelfId(shelfName);
-            currentlyActiveShelf = null;
-        } else {
-            // different shelf's info panel being shown - hide that and show this one!
-            HideInfoPanel(currentlyActiveShelf);
-            ShowShelfId(currentlyActiveShelf);
-            ShowInfoPanel(shelfName);
-            HideShelfId(shelfName);
-            currentlyActiveShelf = shelfName;       
-        }
-
-        return;
-    }
 
     void SetInfoPanel(GameObject infoPanel, string shelfName) {
         // set the text and images on the info panel.
         GameObject idText = infoPanel.transform.Find("ShelfIDText").gameObject;
         Text t = idText.GetComponent<Text>();
         t.text = shelfName;
+        
+        ShelfData sd = shelfDataDict[shelfName];
+        
+        if (sd.cropData.cropList.Count > 0) {
+            
+            GameObject ctText = infoPanel.transform.Find("CropTypeText").gameObject;
+            
+            Text ctt = ctText.GetComponent<Text>();
+            
+            ctt.color = cropColourDict[sd.cropData.cropList[0].crop_type_name];
+            ctt.text = sd.cropData.cropList[0].crop_type_name;
+            
+            GameObject cropImage = infoPanel.transform.Find("CropImage").gameObject;
+            Image cii = cropImage.GetComponent<Image>();
+            cii.sprite = cropImageDict[sd.cropData.cropList[0].crop_type_name];
+            
+            GameObject ciText = infoPanel.transform.Find("CropInfoText").gameObject;
+            Text cit = ciText.GetComponent<Text>();
+            string infotext = "Number of trays: "+sd.cropData.cropList[0].number_of_trays.ToString()+"\n";
+            infotext += "Harvest date: "+sd.cropData.cropList[0].expected_harvest_time+"\n";
+            cit.text = infotext;
+        }
+        if (sd.nearestSensor.sensorList.Count > 0) {
+            GameObject siText = infoPanel.transform.Find("SensorInfoText").gameObject;
+            Text sit = siText.GetComponent<Text>();
+            string sensorText = "";
+            sensorText += "Nearest T/RH sensor: "+sd.nearestSensor.sensorList[0].aisle.ToString()+sd.nearestSensor.sensorList[0].column.ToString()+sd.nearestSensor.sensorList[0].shelf.ToString()+"\n";
+            if (sd.latestReading.readingList.Count > 0) {
+                sensorText += "Latest T/RH reading time: "+sd.latestReading.readingList[0].timestamp+"\n";
+                sensorText += "Temperature: "+sd.latestReading.readingList[0].temperature.ToString()+" C \n";
+                sensorText += "Humidity: "+sd.latestReading.readingList[0].humidity.ToString()+" %";
+            }
+            sit.text = sensorText;
 
+        }
 
 
     }
+
+    public void ShowShelfId(GameObject button) {
+        Transform idTrans = button.transform.GetChild(0);
+        idTrans.gameObject.SetActive(true);
+    }
+
+   public void HideShelfId(GameObject button) {
+        Transform idTrans = button.transform.GetChild(0);
+        idTrans.gameObject.SetActive(false);
+        
+    }
+/*
+    public void ShowAllShelfIds(string columnName) {
+        for (int i=1; i<5; i++) {
+            string shelfName = columnName+"-"+i.ToString();
+            ShowShelfId(shelfName);
+        }
+    }
+
+    public void HideAllShelfIds(string columnName) {
+        for (int i=1; i<5; i++) {
+            string shelfName = columnName+"-"+i.ToString();
+            HideShelfId(shelfName);
+        }
+    }
+*/
+    public void ToggleInfoPanel(GameObject button) {
+        string shelfName = button.name.Split("_")[0];
+        string columnName = shelfName.Split("-")[0]+"-"+shelfName.Split("-")[1];
+        if (currentlyActiveShelf == null) {
+            // no info panel currently showing - show this one!
+            ShowInfoPanel(shelfName);
+            HideShelfId(button);
+            currentlyActiveShelf = shelfName;
+        } else if (currentlyActiveShelf == shelfName) {
+            // this info panel currently showing - hide it!
+            HideInfoPanel(shelfName);
+            ShowShelfId(button);
+            currentlyActiveShelf = null;
+        } else {
+            // different shelf's info panel being shown - hide that and show this one!
+            string oldColumnName = currentlyActiveShelf.Split("-")[0]+"-"+currentlyActiveShelf.Split("-")[1];
+            HideInfoPanel(currentlyActiveShelf);
+            ShowShelfId(button);
+            ShowInfoPanel(shelfName);
+            HideShelfId(button);
+            currentlyActiveShelf = shelfName;       
+        }
+
+        return;
+    }
+
+    
 
 
     public void ShowInfoPanel(string shelfName) {
@@ -247,7 +328,9 @@ public class ShelfDataHolder : MonoBehaviour
         if (shelf != null) {
             Transform columnTransform = shelf.transform.parent;
             GameObject infoCanvas = columnTransform.Find("ColumnCanvas").gameObject;
-            infoCanvas.transform.localPosition = new Vector3(-1000,1000+shelfNum*100, 0);
+            Vector3 canvasPosition = infoCanvas.transform.localPosition;
+            //now move it up or down a bit depending on shelf
+            infoCanvas.transform.localPosition = new Vector3(canvasPosition.x,900+shelfNum*150, canvasPosition.z);
             GameObject infoPanel = columnTransform.Find("ColumnCanvas/InfoPanel").gameObject;
             SetInfoPanel(infoPanel, shelfName);
             infoCanvas.SetActive(true);

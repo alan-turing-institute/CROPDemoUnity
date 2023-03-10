@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
+using TMPro;
 
 using JsonSchema;
 
@@ -28,10 +30,10 @@ public class ShelfPropagation : MonoBehaviour
         //cropDataScript.retrievedCropDataEvent.AddListener(HandleCropData);
     }
 
-    //void HandleCropData() {
-     //   cropDataScript.retrievedCropDataEvent.RemoveListener(HandleCropData);
-    //   ColourShelvesCropType();
-    //}
+    public void HandleButtonClick(GameObject button) {
+        ShelfDataHolder shelfDataScript = GameObject.Find("Farm").GetComponent<ShelfDataHolder>();
+        shelfDataScript.ToggleInfoPanel(button);
+    }
 
     void SetupShelves() {
         for (int i = 0; i < 4; i++) {   
@@ -39,13 +41,29 @@ public class ShelfPropagation : MonoBehaviour
             Transform shelfTransform = this.transform.GetChild(i);
             // and the corresponding GameObject, so that we can set its name
             GameObject shelf = shelfTransform.gameObject;
-            shelf.name = this.name + "-" + (i+1).ToString();
+            string shelfName = this.name + "-" + (i+1).ToString();
+            shelf.name = shelfName;
             // set the layer of the shelf
             int shelfLayer = LayerMask.NameToLayer("Shelf");
             shelf.layer = shelfLayer;
             // add a box collider to the shelf
             BoxCollider bc = shelf.AddComponent<BoxCollider>() as BoxCollider;
-
+            //setup the names of the interactable button on each shelf
+            if (shelf.transform.childCount > 0) {
+                Transform shelfCanvas = shelf.transform.GetChild(0);
+                if (shelfCanvas != null) {
+                    shelfCanvas.gameObject.name = shelfName+"_Canvas";
+                    Transform shelfButton = shelfCanvas.GetChild(0);
+                    if (shelfButton != null) {
+                        shelfButton.gameObject.name = shelfName+"_Button";
+                        Transform shelfButtonText = shelfButton.GetChild(0);
+                        if (shelfButtonText != null) {
+                            shelfButtonText.gameObject.name = shelfName+"_ButtonText";
+                            shelfButtonText.gameObject.GetComponent<TextMeshProUGUI>().text = shelfName;
+                        }
+                    }   
+                }
+            }
         }
     }
 
@@ -69,7 +87,7 @@ public class ShelfPropagation : MonoBehaviour
             CropData cropData = entry.Value;
             Transform shelfTransform = this.transform.GetChild(shelfIndex); 
             shelfTransform.GetComponent<Renderer>().material.color = cropColourDict[cropData.crop_type_name];
-            print("Colouring "+gameObject.name+shelfIndex+" for "+cropData.crop_type_name);
+           // print("Colouring "+gameObject.name+shelfIndex+" for "+cropData.crop_type_name);
         }   
         //print("COLOURING COLUMN "+gameObject.name+" BY CROP TYPE");
     }

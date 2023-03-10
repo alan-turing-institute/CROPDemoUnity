@@ -76,7 +76,6 @@ public class SensorGraph : MonoBehaviour
     //Instantiate graph in panel
     public void ShowGraph(List<float> valueList, float yMax)
     {
-        yMax = yMax;
         graphContainer = transform.Find("Graph").GetComponent<RectTransform>();
         ClearGraphPanel();
         float graphHeight = graphContainer.sizeDelta.y;

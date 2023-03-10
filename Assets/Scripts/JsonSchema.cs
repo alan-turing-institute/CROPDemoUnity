@@ -17,7 +17,7 @@ namespace JsonSchema
         public int column;
         public int shelf;
     }
-
+    // convert a string e.g. "A-1-3" to a Location object with aisle, column, shelf
     public class LocationMaker {
         public Location LocationFromString(string locationString) {
             Location l = new Location();
