@@ -63,11 +63,11 @@ public class SensorMethods : MonoBehaviour
         sensorReadingsScript = sensorsGameObj.GetComponent<SensorReadings>();
         // find the mesh and canvas GameObjects
         sensorMesh = transform.Find("SensorMesh").gameObject;
-        sensorCanvas = transform.Find("SensorCanvas").gameObject;
+        sensorCanvas = transform.Find("SensorMesh/SensorCanvas").gameObject;
         // find the panel that will contain the graphs
-        readingsPanel = transform.Find("SensorCanvas/SensorDisplay/ReadingsPanel").gameObject;
+        readingsPanel = transform.Find("SensorMesh/SensorCanvas/SensorDisplay/ReadingsPanel").gameObject;
         // the panel that will display if there is no data
-        noDataPanel = transform.Find("SensorCanvas/SensorDisplay/NoDataPanel").gameObject;
+        noDataPanel = transform.Find("SensorMesh/SensorCanvas/SensorDisplay/NoDataPanel").gameObject;
         //stores the original color so that it can go back to original after mouse over. 
         startColour = sensorMesh.GetComponent<Renderer>().material.color;
         // set the text for sensor type and id 
@@ -75,7 +75,7 @@ public class SensorMethods : MonoBehaviour
         sensorId = sensorCanvas.transform.Find("SensorDisplay/SensorID").gameObject;
         healthBar = sensorCanvas.transform.Find("SensorDisplay/HealthBar").gameObject;
         // find the camera GameObject
-        camera = GameObject.Find("PlayerCamera");
+        camera = GameObject.Find("XR Origin/Camera Offset/Main Camera");
         // get the script that will create the graphs
         createGraphsScript = readingsPanel.GetComponent<CreateGraphs>();
         SetupUI();
@@ -114,6 +114,35 @@ public class SensorMethods : MonoBehaviour
     }
 
  
+    public void TestSelect() {
+        Transform cube = transform.Find("TestCube");
+        cube.gameObject.SetActive(true);
+    }
+
+    public void TestHover() {
+        Transform sphere = transform.Find("TestSphere");
+        sphere.gameObject.SetActive(true);
+    }
+
+    public void TestActivate() {
+        Transform capsule = transform.Find("TestCapsule");
+        capsule.gameObject.SetActive(true);
+    }
+
+    public void TestSelectEnd() {
+        Transform cube = transform.Find("TestCube");
+        cube.gameObject.SetActive(false);
+    }
+
+    public void TestHoverEnd() {
+        Transform sphere = transform.Find("TestSphere");
+        sphere.gameObject.SetActive(false);
+    }
+
+   public void TestActivateEnd() {
+        Transform capsule = transform.Find("TestCapsule");
+        capsule.gameObject.SetActive(false);
+    }
 
     public void DisplayGraphs() {
         print("Displaying graphs for "+gameObject.name);
@@ -357,7 +386,7 @@ public class SensorMethods : MonoBehaviour
         }
         print("At end of DisplayMonthlyHealthbar");
     }
-*/
+
     ////////////Mouse Controls////////////
     void OnMouseOver() {
         //If your mouse hovers over the GameObject with the script attached, output this message
@@ -367,7 +396,8 @@ public class SensorMethods : MonoBehaviour
     void OnMouseExit() {
         //The mouse is no longer hovering over the GameObject so output this message each frame
         sensorMesh.GetComponent<Renderer>().material.color = startColour;
-    }
+    */
+    
 /*
     void OnMouseDown() {
         // show/hide graphs on sensor click

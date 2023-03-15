@@ -21,6 +21,12 @@ public class GetSensors : MonoBehaviour
     public string connection_string;
     public GameObject sensorPrefab;
     SensorReadings sensorReadingsScript;
+
+    Dictionary<string, Color> sensorColours = new Dictionary<string, Color>{
+        {"Aranet T&RH", new Color(0.75F, 0.15F, 0.15F, 1)},
+        {"Aranet Air Velocity", new Color(0.75F, 0.7F, 0.05F, 1)},
+        {"Aranet CO2", new Color(0.15F, 0.15F, 0.75F, 1)},
+    };
    
     // hold a dictionary of Sensor objects, keyed by sensorID
     public Dictionary<int, Sensor> sensorDict = new Dictionary<int, Sensor>();
@@ -32,7 +38,23 @@ public class GetSensors : MonoBehaviour
         sensorReadingsScript.connection_string = connection_string;
         print("In GetSensors::Start() connection_string is "+connection_string);
         StartCoroutine(GetJson(connection_string+"/getallsensors"));
-        
+
+        GameObject testSensor = GameObject.Find("TestSensor");
+        if (testSensor != null ) {
+            GameObject sensorMesh = testSensor.transform.Find("SensorMesh").gameObject;
+            var meshRenderer = sensorMesh.GetComponent<Renderer>();
+            meshRenderer.material.color = sensorColours["Aranet Air Velocity"];
+            SensorMethods sensorMethodsScript = testSensor.GetComponent<SensorMethods>();
+            Sensor sensor = new Sensor();
+            sensor.aisle = "A";
+            sensor.column = 1;
+            sensor.sensor_id = 28;
+            sensor.sensor_type = "Aranet T&RH";
+            sensor.shelf = 3;
+            sensor.zone = "Tunnel3";
+            sensor.aranet_code = "TEST";
+            sensorMethodsScript.sensor = sensor;
+        }
     }
 
     public IEnumerator GetJson(string url) {
@@ -106,10 +128,29 @@ public class GetSensors : MonoBehaviour
 
     void InstantiateSensor(Sensor sensor, string sensorLocation) {
         GameObject newSensor;
+        if (sensor.sensor_type == "Aranet CO2") sensorLocation = "A-1-4";
+        if (sensor.sensor_type == "Aranet Air Velocity") sensorLocation = "B-1-4";
         print("Instantiating "+sensor.sensor_type+" sensor "+sensor.sensor_id+" at location "+sensorLocation);  
-        Vector3 location = GetGlobalSensorLocation(sensor.zone, sensorLocation, sensor.shelf);   
-        newSensor = Instantiate(sensorPrefab, location, Quaternion.identity); 
+       // Vector3 location = GetGlobalSensorLocation(sensor.zone, sensorLocation, sensor.shelf); 
+        Vector3 location = GetGlobalSensorLocation(sensor.zone, sensorLocation, 4);   
+        // modify the sensor location so that the sensor is visible in front of the shelf.
+        float newY = location.y + 210f;
+        float newX = location.x;
+        if (sensor.sensor_type == "Aranet CO2") newX += 50f;
+        else if (sensor.sensor_type == "Aranet Air Velocity") newX -= 50f;
+        float newZ = location.z;
+        if ((sensor.aisle == "A")) {
+            newZ += 800f;
+        } else {
+            newZ -= 800f;
+        }
+        Vector3 modifiedLocation = new Vector3(newX, newY, newZ);
+        newSensor = Instantiate(sensorPrefab, modifiedLocation, Quaternion.identity); 
         newSensor.name = "sensor_"+sensor.aranet_code.ToString();
+        // set the renderer colour
+        GameObject sensorMesh = newSensor.transform.Find("SensorMesh").gameObject;
+        var meshRenderer = sensorMesh.GetComponent<Renderer>();
+        meshRenderer.material.color = sensorColours[sensor.sensor_type];
         //find parent object
         GameObject parentSensor = GameObject.Find(sensor.sensor_type);
         if (parentSensor == null ) {
@@ -120,11 +161,10 @@ public class GetSensors : MonoBehaviour
         newSensor.transform.parent = parentSensor.transform;
         // We want the SensorCanvas child to be inactive by default, while the sensorMesh
         // should be active.
-        GameObject sensorCanvas = newSensor.transform.Find("SensorCanvas").gameObject;
-        GameObject sensorMesh = newSensor.transform.Find("SensorMesh").gameObject;
+        //GameObject sensorCanvas = newSensor.transform.Find("SensorCanvas").gameObject;
          // set the sensor's Canvas to scale with screen size
-        UnityEngine.UI.CanvasScaler cs = sensorCanvas.GetComponent<UnityEngine.UI.CanvasScaler>();
-        cs.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        //UnityEngine.UI.CanvasScaler cs = sensorCanvas.GetComponent<UnityEngine.UI.CanvasScaler>();
+        //cs.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
         //sensorCanvas.SetActive(false);
         //sensorMesh.SetActive(true);
         //Set sensor properties to instantiated sensor
