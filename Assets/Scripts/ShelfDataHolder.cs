@@ -41,7 +41,7 @@ public class ShelfDataHolder : MonoBehaviour
 
     Dictionary<string, Color> cropColourDict = new Dictionary<string, Color>{
         {"unknown/none", new Color(0.75F, 0.75F, 0.75F, 1)},
-        {"red_cabbage", new Color(0.75F, 0.15F, 0.15F, 1)},
+        {"red cabbage", new Color(0.75F, 0.15F, 0.15F, 1)},
         {"purple radish", new Color(0.6F, 0.05F, 0.7F, 1)},
         {"garlic chive", new Color(0.2F, 0.75F, 0.3F, 1)},
         {"peashoots", new Color(0.3F, 0.85F, 0.1F, 1)}
@@ -61,7 +61,7 @@ public class ShelfDataHolder : MonoBehaviour
         
         // load image textures
         {
-        cropImageDict["red_cabbage"] =  redCabbageImage;
+        cropImageDict["red cabbage"] =  redCabbageImage;
         cropImageDict["peashoots"] = peashootImage;
         cropImageDict["garlic chive"] = garlicChiveImage;
         cropImageDict["purple radish"] = purpleRadishImage;
