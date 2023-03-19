@@ -34,9 +34,11 @@ public class PlayerCam : MonoBehaviour {
         shelfDataHolder = farm.GetComponent<ShelfDataHolder>();
         // set starting direction to look in
         yRotation = -90f;
+        transform.rotation = Quaternion.Euler(0f,yRotation,0);
     }
 
     private void Update() {
+        /*
         float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX;
         float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * sensY;
 
@@ -47,6 +49,7 @@ public class PlayerCam : MonoBehaviour {
 
         transform.rotation = Quaternion.Euler(xRotation,yRotation,0);
         orientation.rotation = Quaternion.Euler(0, yRotation, 0);
+*/
 
         // see if we're looking at a sensor or shelf
         Transform lookingAt = LookingAtSomething();
